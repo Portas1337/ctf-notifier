@@ -1,0 +1,44 @@
+name: CTFtime Notifier
+
+on:
+  schedule:
+    - cron: "0 * * * *"      # toda hora cheia (UTC)
+  workflow_dispatch:          # permite rodar manualmente pelo botão
+
+permissions:
+  contents: write             # necessário pra commitar o seen_events.json
+
+concurrency:
+  group: ctf-notifier
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run notifier
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          DAYS_AHEAD: "14"
+          MIN_WEIGHT: "0"
+        run: python notify.py
+
+      - name: Commit state
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen_events.json
+          if git diff --staged --quiet; then
+            echo "Sem mudanças no estado."
+          else
+            git commit -m "chore: atualiza eventos vistos [skip ci]"
+            git push
+          fi
