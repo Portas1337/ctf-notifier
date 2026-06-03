@@ -83,7 +83,12 @@ def send_to_discord(embeds):
         data = json.dumps(payload).encode()
         req = urllib.request.Request(
             WEBHOOK_URL, data=data,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/120.0.0.0 Safari/537.36",
+            },
             method="POST",
         )
         try:
